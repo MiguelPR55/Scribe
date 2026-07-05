@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "scribe",
+  "version": "${version}",
+  "name": "Scribe",
+  "description": "Manage saved coordinates with quick chat commands. Data is stored as plain text inside the current world's save folder.",
+  "authors": [
+    "Miguel"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.scribe.Scribe"
+    ]
+  },
+  "mixins": [],
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
