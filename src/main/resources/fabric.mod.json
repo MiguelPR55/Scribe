@@ -9,11 +9,23 @@
   ],
   "contact": {},
   "license": "MIT",
+  "icon": "assets/scribe/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
       "com.scribe.Scribe"
+    ],
+    "modmenu": [
+      "com.scribe.compat.ScribeModMenu"
     ]
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.sources": "https://github.com/MiguelPR55/Scribe",
+        "modmenu.issues": "https://github.com/MiguelPR55/Scribe/issues"
+      }
+    }
   },
   "mixins": [],
   "depends": {
