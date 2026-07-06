@@ -29,18 +29,10 @@ public record CoordinateEntry(String name, BlockPos pos, String dimension) {
 	 * @return the parsed entry, or null if the line is malformed.
 	 */
 	public static CoordinateEntry fromFileLine(String line) {
-		String[] parts = line.trim().split("\\s+");
-		if (parts.length != 5) {
-			return null;
-		}
-
+		String[] p = line.trim().split("\\s+");
+		if (p.length != 5) return null;
 		try {
-			String name = parts[0];
-			int x = Integer.parseInt(parts[1]);
-			int y = Integer.parseInt(parts[2]);
-			int z = Integer.parseInt(parts[3]);
-			String dimension = parts[4];
-			return new CoordinateEntry(name, new BlockPos(x, y, z), dimension);
+			return new CoordinateEntry(p[0], new BlockPos(Integer.parseInt(p[1]), Integer.parseInt(p[2]), Integer.parseInt(p[3])), p[4]);
 		} catch (NumberFormatException e) {
 			return null;
 		}

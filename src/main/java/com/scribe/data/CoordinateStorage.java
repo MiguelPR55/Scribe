@@ -114,8 +114,8 @@ public final class CoordinateStorage {
 		return ENTRIES.values().stream().map(CoordinateEntry::name).toList();
 	}
 
-	public static Collection<CoordinateEntry> all() {
-		return ENTRIES.values();
+	public static boolean isEmpty() {
+		return ENTRIES.isEmpty();
 	}
 
 	private static String key(String name) {

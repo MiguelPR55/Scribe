@@ -4,11 +4,13 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.scribe.data.CoordinateEntry;
 import com.scribe.data.CoordinateStorage;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.ClickEvent;
@@ -21,16 +23,12 @@ import java.util.Optional;
 
 /**
  * All of Scribe's chat-command logic.
- * <p>
- * Requirements recap:
- * - /coords, /coordinates and /scribe must be exact, independent aliases
- * (not Brigadier redirects — each gets its own full copy of the tree).
- * - add/recall/help subcommands, plus the optional list/remove additions.
- * - Any player may use every subcommand (no permission requirement).
  */
 public final class ScribeCommand {
 
 	private static final String[] ALIASES = {"coords", "coordinates", "scribe"};
+	private static final SuggestionProvider<CommandSourceStack> SUGGEST_NAMES =
+			(ctx, builder) -> SharedSuggestionProvider.suggest(CoordinateStorage.names(), builder);
 
 	private ScribeCommand() {
 	}
@@ -69,7 +67,7 @@ public final class ScribeCommand {
 				// /coords replace <name> <coordinates>
 				.then(Commands.literal("replace")
 						.then(Commands.argument("name", StringArgumentType.word())
-								.suggests(CoordinateNameSuggestionProvider.INSTANCE)
+								.suggests(SUGGEST_NAMES)
 								.executes(ScribeCommand::executeReplaceCurrentPosition)
 								.then(Commands.argument("coordinates", BlockPosArgument.blockPos())
 										.executes(ScribeCommand::executeReplaceExplicitPosition))))
@@ -77,13 +75,13 @@ public final class ScribeCommand {
 				// /coords recall <name>
 				.then(Commands.literal("recall")
 						.then(Commands.argument("name", StringArgumentType.word())
-								.suggests(CoordinateNameSuggestionProvider.INSTANCE)
+								.suggests(SUGGEST_NAMES)
 								.executes(ScribeCommand::executeRecall)))
 
 				// /coords remove <name>
 				.then(Commands.literal("remove")
 						.then(Commands.argument("name", StringArgumentType.word())
-								.suggests(CoordinateNameSuggestionProvider.INSTANCE)
+								.suggests(SUGGEST_NAMES)
 								.executes(ScribeCommand::executeRemove)));
 	}
 
@@ -202,7 +200,7 @@ public final class ScribeCommand {
 	// ------------------------------------------------------------------
 
 	private static int executeList(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context) {
-		if (CoordinateStorage.all().isEmpty()) {
+		if (CoordinateStorage.isEmpty()) {
 			context.getSource().sendSuccess(
 					() -> Component.literal("No waypoints saved yet. Try /coords add <name>."), false);
 			return 1;
