@@ -29,7 +29,7 @@ public record CoordinateEntry(String name, BlockPos pos, String dimension) {
 	 * @return the parsed entry, or null if the line is malformed.
 	 */
 	public static CoordinateEntry fromFileLine(String line) {
-		String[] parts = line.trim().split(" ");
+		String[] parts = line.trim().split("\\s+");
 		if (parts.length != 5) {
 			return null;
 		}
