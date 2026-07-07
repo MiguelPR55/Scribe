@@ -135,9 +135,11 @@ public final class ScribeCommand {
 
 		CoordinateStorage.put(new CoordinateEntry(name, pos, dimension));
 
-		Component message = Component.literal("Saved waypoint '" + name + "' at ")
+		Component message = Component.literal("Saved waypoint '")
+				.append(Component.literal(name).withStyle(ChatFormatting.AQUA))
+				.append(Component.literal("' at "))
 				.append(formatClickableCoords(pos))
-				.append(Component.literal(" (" + dimension + ")"));
+				.append(Component.literal(" (" + dimension + ")").withStyle(ChatFormatting.WHITE));
 
 		context.getSource().sendSuccess(() -> message, false);
 		return 1;
@@ -169,9 +171,9 @@ public final class ScribeCommand {
 		}
 
 		CoordinateEntry entry = found.get();
-		Component message = Component.literal(entry.name() + ": ")
+		Component message = Component.literal(entry.name() + ": ").withStyle(ChatFormatting.AQUA)
 				.append(formatClickableCoords(entry.pos()))
-				.append(Component.literal(" (" + entry.dimension() + ")"));
+				.append(Component.literal(" (" + entry.dimension() + ")").withStyle(ChatFormatting.WHITE));
 
 		context.getSource().sendSuccess(() -> message, false);
 		return 1;
@@ -187,7 +189,9 @@ public final class ScribeCommand {
 
 		if (removed) {
 			context.getSource().sendSuccess(
-					() -> Component.literal("Removed waypoint '" + name + "'."), false);
+					() -> Component.literal("Removed waypoint '")
+							.append(Component.literal(name).withStyle(ChatFormatting.AQUA))
+							.append(Component.literal("'.")), false);
 			return 1;
 		}
 
@@ -209,9 +213,10 @@ public final class ScribeCommand {
 
 		context.getSource().sendSuccess(() -> Component.literal("Saved waypoints:"), false);
 		for (CoordinateEntry entry : CoordinateStorage.all()) {
-			Component line = Component.literal("• " + entry.name() + ": ")
+			Component line = Component.literal("• ")
+					.append(Component.literal(entry.name() + ": ").withStyle(ChatFormatting.AQUA))
 					.append(formatClickableCoords(entry.pos()))
-					.append(Component.literal(" (" + entry.dimension() + ")"));
+					.append(Component.literal(" (" + entry.dimension() + ")").withStyle(ChatFormatting.WHITE));
 			context.getSource().sendSuccess(() -> line, false);
 		}
 		return 1;
