@@ -7,6 +7,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.scribe.data.CoordinateEntry;
 import com.scribe.data.CoordinateStorage;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -134,13 +135,22 @@ public final class ScribeCommand {
 
 		CoordinateStorage.put(new CoordinateEntry(name, pos, dimension));
 
-		context.getSource().sendSuccess(
-				() -> Component.literal("Saved waypoint '" + name + "' at "
-						+ pos.getX() + " " + pos.getY() + " " + pos.getZ()
-						+ " (" + dimension + ")"),
-				false
-		);
+		Component message = Component.literal("Saved waypoint '" + name + "' at ")
+				.append(formatClickableCoords(pos))
+				.append(Component.literal(" (" + dimension + ")"));
+
+		context.getSource().sendSuccess(() -> message, false);
 		return 1;
+	}
+
+	private static Component formatClickableCoords(BlockPos pos) {
+		String coordsText = pos.getX() + " " + pos.getY() + " " + pos.getZ();
+		Style clickableStyle = Style.EMPTY
+				.withColor(ChatFormatting.GREEN)
+				.withClickEvent(new ClickEvent.CopyToClipboard(coordsText))
+				.withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to copy coordinates")))
+				.withUnderlined(true);
+		return Component.literal(coordsText).withStyle(clickableStyle);
 	}
 
 	// ------------------------------------------------------------------
@@ -159,17 +169,8 @@ public final class ScribeCommand {
 		}
 
 		CoordinateEntry entry = found.get();
-		BlockPos pos = entry.pos();
-		String coordsText = pos.getX() + " " + pos.getY() + " " + pos.getZ();
-
-		// Clicking the coordinates copies "X Y Z" to the clipboard, as requested.
-		Style clickableStyle = Style.EMPTY
-				.withClickEvent(new ClickEvent.CopyToClipboard(coordsText))
-				.withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to copy coordinates")))
-				.withUnderlined(true);
-
 		Component message = Component.literal(entry.name() + ": ")
-				.append(Component.literal(coordsText).withStyle(clickableStyle))
+				.append(formatClickableCoords(entry.pos()))
 				.append(Component.literal(" (" + entry.dimension() + ")"));
 
 		context.getSource().sendSuccess(() -> message, false);
@@ -206,9 +207,13 @@ public final class ScribeCommand {
 			return 1;
 		}
 
-		Component message = Component.literal("Saved waypoints: "
-				+ String.join(", ", CoordinateStorage.names()));
-		context.getSource().sendSuccess(() -> message, false);
+		context.getSource().sendSuccess(() -> Component.literal("Saved waypoints:"), false);
+		for (CoordinateEntry entry : CoordinateStorage.all()) {
+			Component line = Component.literal("• " + entry.name() + ": ")
+					.append(formatClickableCoords(entry.pos()))
+					.append(Component.literal(" (" + entry.dimension() + ")"));
+			context.getSource().sendSuccess(() -> line, false);
+		}
 		return 1;
 	}
 
