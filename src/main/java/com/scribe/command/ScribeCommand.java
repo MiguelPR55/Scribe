@@ -27,7 +27,6 @@ import java.util.Optional;
  */
 public final class ScribeCommand {
 
-	private static final String[] ALIASES = {"coords", "coordinates", "scribe"};
 	private static final SuggestionProvider<CommandSourceStack> SUGGEST_NAMES =
 			(ctx, builder) -> SharedSuggestionProvider.suggest(CoordinateStorage.names(), builder);
 
@@ -38,9 +37,14 @@ public final class ScribeCommand {
 			CommandDispatcher<CommandSourceStack> dispatcher,
 			CommandBuildContext registryAccess
 	) {
-		for (String alias : ALIASES) {
-			dispatcher.register(buildTree(alias));
-		}
+		LiteralArgumentBuilder<CommandSourceStack> main = buildTree("coords");
+		var mainNode = dispatcher.register(main);
+
+		// "coordinates" y "scribe" son simples alias que redirigen al árbol
+		// ya registrado bajo "coords", en vez de reconstruir el árbol entero
+		// 3 veces por separado.
+		dispatcher.register(Commands.literal("coordinates").redirect(mainNode));
+		dispatcher.register(Commands.literal("scribe").redirect(mainNode));
 	}
 
 	private static LiteralArgumentBuilder<CommandSourceStack> buildTree(String name) {
@@ -60,18 +64,18 @@ public final class ScribeCommand {
 				// /coords add <name> <coordinates>
 				.then(Commands.literal("add")
 						.then(Commands.argument("name", StringArgumentType.word())
-								.executes(ScribeCommand::executeAddCurrentPosition)
+								.executes(ctx -> executeSave(ctx, false, false))
 								.then(Commands.argument("coordinates", BlockPosArgument.blockPos())
-										.executes(ScribeCommand::executeAddExplicitPosition))))
+										.executes(ctx -> executeSave(ctx, false, true)))))
 
 				// /coords replace <name>
 				// /coords replace <name> <coordinates>
 				.then(Commands.literal("replace")
 						.then(Commands.argument("name", StringArgumentType.word())
 								.suggests(SUGGEST_NAMES)
-								.executes(ScribeCommand::executeReplaceCurrentPosition)
+								.executes(ctx -> executeSave(ctx, true, false))
 								.then(Commands.argument("coordinates", BlockPosArgument.blockPos())
-										.executes(ScribeCommand::executeReplaceExplicitPosition))))
+										.executes(ctx -> executeSave(ctx, true, true)))))
 
 				// /coords recall <name>
 				.then(Commands.literal("recall")
@@ -90,30 +94,16 @@ public final class ScribeCommand {
 	// add & replace
 	// ------------------------------------------------------------------
 
-	private static int executeAddCurrentPosition(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context)
-			throws CommandSyntaxException {
+	private static int executeSave(
+			com.mojang.brigadier.context.CommandContext<CommandSourceStack> context,
+			boolean allowOverwrite,
+			boolean explicitCoordinates
+	) throws CommandSyntaxException {
 		ServerPlayer player = context.getSource().getPlayerOrException();
-		return saveEntry(context, player, player.blockPosition(), false);
-	}
-
-	private static int executeAddExplicitPosition(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context)
-			throws CommandSyntaxException {
-		ServerPlayer player = context.getSource().getPlayerOrException();
-		BlockPos pos = BlockPosArgument.getLoadedBlockPos(context, "coordinates");
-		return saveEntry(context, player, pos, false);
-	}
-
-	private static int executeReplaceCurrentPosition(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context)
-			throws CommandSyntaxException {
-		ServerPlayer player = context.getSource().getPlayerOrException();
-		return saveEntry(context, player, player.blockPosition(), true);
-	}
-
-	private static int executeReplaceExplicitPosition(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context)
-			throws CommandSyntaxException {
-		ServerPlayer player = context.getSource().getPlayerOrException();
-		BlockPos pos = BlockPosArgument.getLoadedBlockPos(context, "coordinates");
-		return saveEntry(context, player, pos, true);
+		BlockPos pos = explicitCoordinates
+				? BlockPosArgument.getLoadedBlockPos(context, "coordinates")
+				: player.blockPosition();
+		return saveEntry(context, player, pos, allowOverwrite);
 	}
 
 	private static int saveEntry(

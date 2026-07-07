@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -146,7 +147,12 @@ public final class CoordinateStorage {
 				content.append(entry.toFileLine()).append(System.lineSeparator());
 			}
 
-			Files.writeString(filePath, content.toString(), StandardCharsets.UTF_8);
+			// Se escribe primero a un fichero temporal y se renombra de forma
+			// atómica, para no dejar saved_coords.txt corrupto si el servidor
+			// se cae justo durante la escritura.
+			Path tmp = filePath.resolveSibling(FILE_NAME + ".tmp");
+			Files.writeString(tmp, content.toString(), StandardCharsets.UTF_8);
+			Files.move(tmp, filePath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
 		} catch (IOException e) {
 			LOGGER.error("[Scribe] Failed to write {}", filePath, e);
 		}
