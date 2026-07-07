@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.scribe.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "WorldCoordinatesMixin",
+    "CoordinateSuggestionMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
