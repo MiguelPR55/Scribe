@@ -150,7 +150,7 @@ public final class ScribeCommand {
 				.append(Component.literal(name).withStyle(ChatFormatting.AQUA))
 				.append(Component.literal("' at "))
 				.append(formatClickableCoords(pos))
-				.append(Component.literal(" (" + dimension + ")").withStyle(ChatFormatting.WHITE));
+				.append(formatDimension(dimension));
 
 		context.getSource().sendSuccess(() -> message, false);
 		return 1;
@@ -164,6 +164,25 @@ public final class ScribeCommand {
 				.withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to copy coordinates")))
 				.withUnderlined(true);
 		return Component.literal(coordsText).withStyle(clickableStyle);
+	}
+
+	private static Component formatDimension(String dimension) {
+		ChatFormatting color;
+		switch (dimension) {
+			case "minecraft:overworld":
+				color = ChatFormatting.DARK_GREEN;
+				break;
+			case "minecraft:the_nether":
+				color = ChatFormatting.RED;
+				break;
+			case "minecraft:the_end":
+				color = ChatFormatting.DARK_PURPLE;
+				break;
+			default:
+				color = ChatFormatting.GRAY;
+				break;
+		}
+		return Component.literal(" (" + dimension + ")").withStyle(color);
 	}
 
 	// ------------------------------------------------------------------
@@ -184,7 +203,7 @@ public final class ScribeCommand {
 		CoordinateEntry entry = found.get();
 		Component message = Component.literal(entry.name() + ": ").withStyle(ChatFormatting.AQUA)
 				.append(formatClickableCoords(entry.pos()))
-				.append(Component.literal(" (" + entry.dimension() + ")").withStyle(ChatFormatting.WHITE));
+				.append(formatDimension(entry.dimension()));
 
 		context.getSource().sendSuccess(() -> message, false);
 		return 1;
@@ -227,7 +246,7 @@ public final class ScribeCommand {
 			Component line = Component.literal("• ")
 					.append(Component.literal(entry.name() + ": ").withStyle(ChatFormatting.AQUA))
 					.append(formatClickableCoords(entry.pos()))
-					.append(Component.literal(" (" + entry.dimension() + ")").withStyle(ChatFormatting.WHITE));
+					.append(formatDimension(entry.dimension()));
 			context.getSource().sendSuccess(() -> line, false);
 		}
 		return 1;
