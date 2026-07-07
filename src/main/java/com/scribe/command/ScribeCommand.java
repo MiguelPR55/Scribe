@@ -125,9 +125,20 @@ public final class ScribeCommand {
 		String name = StringArgumentType.getString(context, "name");
 
 		if (!allowOverwrite && CoordinateStorage.exists(name)) {
-			context.getSource().sendFailure(
-					Component.literal("Waypoint '" + name + "' already exists! Use '/coords replace " + name + "' to overwrite it.")
-			);
+			String replaceCmd = "/coords replace " + name;
+			Style suggestStyle = Style.EMPTY
+					.withColor(ChatFormatting.YELLOW)
+					.withClickEvent(new ClickEvent.SuggestCommand(replaceCmd))
+					.withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to insert command in chat")))
+					.withUnderlined(true);
+
+			Component errorMessage = Component.literal("Waypoint '")
+					.append(Component.literal(name).withStyle(ChatFormatting.AQUA))
+					.append(Component.literal("' already exists! Click "))
+					.append(Component.literal(replaceCmd).withStyle(suggestStyle))
+					.append(Component.literal(" to overwrite it."));
+
+			context.getSource().sendFailure(errorMessage);
 			return 0;
 		}
 
