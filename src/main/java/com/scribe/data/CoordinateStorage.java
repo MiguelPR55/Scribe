@@ -152,7 +152,11 @@ public final class CoordinateStorage {
 			// se cae justo durante la escritura.
 			Path tmp = filePath.resolveSibling(FILE_NAME + ".tmp");
 			Files.writeString(tmp, content.toString(), StandardCharsets.UTF_8);
-			Files.move(tmp, filePath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+			try {
+				Files.move(tmp, filePath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+			} catch (java.nio.file.AtomicMoveNotSupportedException e) {
+				Files.move(tmp, filePath, StandardCopyOption.REPLACE_EXISTING);
+			}
 		} catch (IOException e) {
 			LOGGER.error("[Scribe] Failed to write {}", filePath, e);
 		}
