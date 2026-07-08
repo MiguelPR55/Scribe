@@ -147,9 +147,9 @@ public final class CoordinateStorage {
 				content.append(entry.toFileLine()).append(System.lineSeparator());
 			}
 
-			// Se escribe primero a un fichero temporal y se renombra de forma
-			// atómica, para no dejar saved_coords.txt corrupto si el servidor
-			// se cae justo durante la escritura.
+			// Write first to a temporary file and rename atomically
+			// so saved_coords.txt is not left corrupted if the server
+			// crashes during the write.
 			Path tmp = filePath.resolveSibling(FILE_NAME + ".tmp");
 			Files.writeString(tmp, content.toString(), StandardCharsets.UTF_8);
 			try {

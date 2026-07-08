@@ -40,9 +40,9 @@ public final class ScribeCommand {
 		LiteralArgumentBuilder<CommandSourceStack> main = buildTree("coords");
 		var mainNode = dispatcher.register(main);
 
-		// "coordinates" y "scribe" son simples alias que redirigen al árbol
-		// ya registrado bajo "coords", en vez de reconstruir el árbol entero
-		// 3 veces por separado.
+		// "coordinates" and "scribe" are simple aliases that redirect to the tree
+		// already registered under "coords", instead of rebuilding the entire tree
+		// 3 times separately.
 		dispatcher.register(Commands.literal("coordinates").redirect(mainNode));
 		dispatcher.register(Commands.literal("scribe").redirect(mainNode));
 	}
@@ -175,6 +175,22 @@ public final class ScribeCommand {
 		return Component.literal(" (" + dimension + ")").withStyle(color);
 	}
 
+	private static Component formatDistance(CommandSourceStack source, CoordinateEntry entry) {
+		if (!(source.getEntity() instanceof ServerPlayer player)) {
+			// Executed from console, a command block, etc. — no reference position,
+			// so we do not show distance.
+			return Component.empty();
+		}
+
+		String currentDimension = player.level().dimension().identifier().toString();
+		if (!currentDimension.equals(entry.dimension())) {
+			return Component.literal(" [other dimension]").withStyle(ChatFormatting.DARK_GRAY);
+		}
+
+		double distance = Math.sqrt(player.blockPosition().distSqr(entry.pos()));
+		return Component.literal(" (" + Math.round(distance) + "m)").withStyle(ChatFormatting.GRAY);
+	}
+
 	// ------------------------------------------------------------------
 	// recall
 	// ------------------------------------------------------------------
@@ -193,7 +209,8 @@ public final class ScribeCommand {
 		CoordinateEntry entry = found.get();
 		Component message = Component.literal(entry.name() + ": ").withStyle(ChatFormatting.AQUA)
 				.append(formatClickableCoords(entry.pos()))
-				.append(formatDimension(entry.dimension()));
+				.append(formatDimension(entry.dimension()))
+				.append(formatDistance(context.getSource(), entry));
 
 		context.getSource().sendSuccess(() -> message, false);
 		return 1;
@@ -236,7 +253,8 @@ public final class ScribeCommand {
 			Component line = Component.literal("• ")
 					.append(Component.literal(entry.name() + ": ").withStyle(ChatFormatting.AQUA))
 					.append(formatClickableCoords(entry.pos()))
-					.append(formatDimension(entry.dimension()));
+					.append(formatDimension(entry.dimension()))
+					.append(formatDistance(context.getSource(), entry));
 			context.getSource().sendSuccess(() -> line, false);
 		}
 		return 1;
