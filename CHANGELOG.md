@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.1.1-beta] - 2026-08-04
+
+### Changed
+- Removed redundant `[other dimension]` text from `/coords list` and `/coords recall` commands.
+
 ## [0.9.1-beta] - 2026-07-08
 
 ### Added
