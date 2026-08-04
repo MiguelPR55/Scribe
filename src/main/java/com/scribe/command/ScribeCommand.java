@@ -184,7 +184,7 @@ public final class ScribeCommand {
 
 		String currentDimension = player.level().dimension().identifier().toString();
 		if (!currentDimension.equals(entry.dimension())) {
-			return Component.literal(" [other dimension]").withStyle(ChatFormatting.DARK_GRAY);
+			return Component.empty();
 		}
 
 		double distance = Math.sqrt(player.blockPosition().distSqr(entry.pos()));
