@@ -2,11 +2,15 @@ package com.scribe.compat;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.NoticeWithLinkScreen;
 import net.minecraft.network.chat.Component;
+
 import java.net.URI;
 
+@Environment(EnvType.CLIENT)
 public class ScribeModMenu implements ModMenuApi {
 	@Override
 	public ConfigScreenFactory<?> getModConfigScreenFactory() {

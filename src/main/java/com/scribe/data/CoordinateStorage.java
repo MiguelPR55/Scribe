@@ -47,7 +47,7 @@ public final class CoordinateStorage {
 	 * existing entries into memory. Call this on server start (see
 	 * {@link com.scribe.Scribe}).
 	 */
-	public static void load(MinecraftServer server) {
+	public static synchronized void load(MinecraftServer server) {
 		Path worldRoot = server.getWorldPath(LevelResource.ROOT);
 		Path dataDir = worldRoot.resolve("data").resolve(DATA_DIR);
 		filePath = dataDir.resolve(FILE_NAME);
@@ -62,7 +62,7 @@ public final class CoordinateStorage {
 		try {
 			List<String> lines = Files.readAllLines(filePath, StandardCharsets.UTF_8);
 			for (String line : lines) {
-				if (line.isBlank()) {
+				if (line.isBlank() || line.trim().startsWith("#")) {
 					continue;
 				}
 				CoordinateEntry entry = CoordinateEntry.fromFileLine(line);
@@ -79,9 +79,17 @@ public final class CoordinateStorage {
 	}
 
 	/**
+	 * Clears in-memory entries and resets file path on server shutdown.
+	 */
+	public static synchronized void unload() {
+		ENTRIES.clear();
+		filePath = null;
+	}
+
+	/**
 	 * Adds (or overwrites) an entry and immediately rewrites the save file.
 	 */
-	public static void put(CoordinateEntry entry) {
+	public static synchronized void put(CoordinateEntry entry) {
 		ENTRIES.put(key(entry.name()), entry);
 		save();
 	}
@@ -91,7 +99,7 @@ public final class CoordinateStorage {
 	 *
 	 * @return true if an entry was removed.
 	 */
-	public static boolean remove(String name) {
+	public static synchronized boolean remove(String name) {
 		boolean removed = ENTRIES.remove(key(name)) != null;
 		if (removed) {
 			save();
@@ -99,11 +107,11 @@ public final class CoordinateStorage {
 		return removed;
 	}
 
-	public static Optional<CoordinateEntry> get(String name) {
+	public static synchronized Optional<CoordinateEntry> get(String name) {
 		return Optional.ofNullable(ENTRIES.get(key(name)));
 	}
 
-	public static boolean exists(String name) {
+	public static synchronized boolean exists(String name) {
 		return ENTRIES.containsKey(key(name));
 	}
 
@@ -111,15 +119,15 @@ public final class CoordinateStorage {
 	 * @return the display names of every saved entry, in insertion order.
 	 * Used both for /coords list and for tab-completion suggestions.
 	 */
-	public static Collection<String> names() {
+	public static synchronized Collection<String> names() {
 		return ENTRIES.values().stream().map(CoordinateEntry::name).toList();
 	}
 
-	public static Collection<CoordinateEntry> all() {
-		return ENTRIES.values();
+	public static synchronized Collection<CoordinateEntry> all() {
+		return List.copyOf(ENTRIES.values());
 	}
 
-	public static boolean isEmpty() {
+	public static synchronized boolean isEmpty() {
 		return ENTRIES.isEmpty();
 	}
 
@@ -139,6 +147,7 @@ public final class CoordinateStorage {
 			return;
 		}
 
+		Path tmp = filePath.resolveSibling(FILE_NAME + ".tmp");
 		try {
 			Files.createDirectories(filePath.getParent());
 
@@ -150,7 +159,6 @@ public final class CoordinateStorage {
 			// Write first to a temporary file and rename atomically
 			// so saved_coords.txt is not left corrupted if the server
 			// crashes during the write.
-			Path tmp = filePath.resolveSibling(FILE_NAME + ".tmp");
 			Files.writeString(tmp, content.toString(), StandardCharsets.UTF_8);
 			try {
 				Files.move(tmp, filePath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
@@ -159,6 +167,10 @@ public final class CoordinateStorage {
 			}
 		} catch (IOException e) {
 			LOGGER.error("[Scribe] Failed to write {}", filePath, e);
+			try {
+				Files.deleteIfExists(tmp);
+			} catch (IOException ignored) {
+			}
 		}
 	}
 }

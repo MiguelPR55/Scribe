@@ -7,7 +7,10 @@
   "authors": [
     "Miguel"
   ],
-  "contact": {},
+  "contact": {
+    "sources": "https://github.com/MiguelPR55/Scribe",
+    "issues": "https://github.com/MiguelPR55/Scribe/issues"
+  },
   "license": "MIT",
   "icon": "assets/scribe/icon.png",
   "environment": "*",

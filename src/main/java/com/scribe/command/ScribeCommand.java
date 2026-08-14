@@ -40,11 +40,15 @@ public final class ScribeCommand {
 		LiteralArgumentBuilder<CommandSourceStack> main = buildTree("coords");
 		var mainNode = dispatcher.register(main);
 
-		// "coordinates" and "scribe" are simple aliases that redirect to the tree
-		// already registered under "coords", instead of rebuilding the entire tree
-		// 3 times separately.
-		dispatcher.register(Commands.literal("coordinates").redirect(mainNode));
-		dispatcher.register(Commands.literal("scribe").redirect(mainNode));
+		// "coordinates" and "scribe" are aliases redirecting to "coords".
+		// .executes() is required on the alias literal so executing just "/coordinates"
+		// or "/scribe" triggers the help handler rather than failing syntax parsing.
+		dispatcher.register(Commands.literal("coordinates")
+				.executes(ScribeCommand::executeHelp)
+				.redirect(mainNode));
+		dispatcher.register(Commands.literal("scribe")
+				.executes(ScribeCommand::executeHelp)
+				.redirect(mainNode));
 	}
 
 	private static LiteralArgumentBuilder<CommandSourceStack> buildTree(String name) {
@@ -99,17 +103,27 @@ public final class ScribeCommand {
 			boolean allowOverwrite,
 			boolean explicitCoordinates
 	) throws CommandSyntaxException {
-		ServerPlayer player = context.getSource().getPlayerOrException();
-		BlockPos pos = explicitCoordinates
-				? BlockPosArgument.getLoadedBlockPos(context, "coordinates")
-				: player.blockPosition();
-		return saveEntry(context, player, pos, allowOverwrite);
+		BlockPos pos;
+		String dimension;
+
+		if (explicitCoordinates) {
+			// getBlockPos does not force chunk loading, allowing waypoints
+			// to be saved for unloaded regions and from console/datapacks.
+			pos = BlockPosArgument.getBlockPos(context, "coordinates");
+			dimension = context.getSource().getLevel().dimension().identifier().toString();
+		} else {
+			ServerPlayer player = context.getSource().getPlayerOrException();
+			pos = player.blockPosition();
+			dimension = player.level().dimension().identifier().toString();
+		}
+
+		return saveEntry(context, pos, dimension, allowOverwrite);
 	}
 
 	private static int saveEntry(
 			com.mojang.brigadier.context.CommandContext<CommandSourceStack> context,
-			ServerPlayer player,
 			BlockPos pos,
+			String dimension,
 			boolean allowOverwrite
 	) {
 		String name = StringArgumentType.getString(context, "name");
@@ -131,8 +145,6 @@ public final class ScribeCommand {
 			context.getSource().sendFailure(errorMessage);
 			return 0;
 		}
-
-		String dimension = player.level().dimension().identifier().toString();
 
 		CoordinateStorage.put(new CoordinateEntry(name, pos, dimension));
 
@@ -157,21 +169,12 @@ public final class ScribeCommand {
 	}
 
 	private static Component formatDimension(String dimension) {
-		ChatFormatting color;
-		switch (dimension) {
-			case "minecraft:overworld":
-				color = ChatFormatting.DARK_GREEN;
-				break;
-			case "minecraft:the_nether":
-				color = ChatFormatting.RED;
-				break;
-			case "minecraft:the_end":
-				color = ChatFormatting.DARK_PURPLE;
-				break;
-			default:
-				color = ChatFormatting.GRAY;
-				break;
-		}
+		ChatFormatting color = switch (dimension) {
+			case "minecraft:overworld" -> ChatFormatting.DARK_GREEN;
+			case "minecraft:the_nether" -> ChatFormatting.RED;
+			case "minecraft:the_end" -> ChatFormatting.DARK_PURPLE;
+			default -> ChatFormatting.GRAY;
+		};
 		return Component.literal(" (" + dimension + ")").withStyle(color);
 	}
 
@@ -191,6 +194,13 @@ public final class ScribeCommand {
 		return Component.literal(" (" + Math.round(distance) + "m)").withStyle(ChatFormatting.GRAY);
 	}
 
+	private static Component formatEntry(CommandSourceStack source, CoordinateEntry entry) {
+		return Component.literal(entry.name() + ": ").withStyle(ChatFormatting.AQUA)
+				.append(formatClickableCoords(entry.pos()))
+				.append(formatDimension(entry.dimension()))
+				.append(formatDistance(source, entry));
+	}
+
 	// ------------------------------------------------------------------
 	// recall
 	// ------------------------------------------------------------------
@@ -206,12 +216,7 @@ public final class ScribeCommand {
 			return 0;
 		}
 
-		CoordinateEntry entry = found.get();
-		Component message = Component.literal(entry.name() + ": ").withStyle(ChatFormatting.AQUA)
-				.append(formatClickableCoords(entry.pos()))
-				.append(formatDimension(entry.dimension()))
-				.append(formatDistance(context.getSource(), entry));
-
+		Component message = formatEntry(context.getSource(), found.get());
 		context.getSource().sendSuccess(() -> message, false);
 		return 1;
 	}
@@ -250,11 +255,7 @@ public final class ScribeCommand {
 
 		context.getSource().sendSuccess(() -> Component.literal("Saved waypoints:"), false);
 		for (CoordinateEntry entry : CoordinateStorage.all()) {
-			Component line = Component.literal("• ")
-					.append(Component.literal(entry.name() + ": ").withStyle(ChatFormatting.AQUA))
-					.append(formatClickableCoords(entry.pos()))
-					.append(formatDimension(entry.dimension()))
-					.append(formatDistance(context.getSource(), entry));
+			Component line = Component.literal("• ").append(formatEntry(context.getSource(), entry));
 			context.getSource().sendSuccess(() -> line, false);
 		}
 		return 1;
@@ -266,12 +267,13 @@ public final class ScribeCommand {
 
 	private static int executeHelp(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context) {
 		context.getSource().sendSuccess(() -> Component.literal(
-				"Scribe — save and recall coordinates (aliases: /coords, /coordinates, /scribe)\n"
-						+ "  add <name> [<x> <y> <z>]      - save a waypoint (uses your position if coordinates are omitted)\n"
-						+ "  replace <name> [<x> <y> <z>]  - overwrite an existing waypoint (or create if new)\n"
-						+ "  recall <name>                 - show a saved waypoint (click its coordinates to copy them)\n"
-						+ "  remove <name>                 - delete a saved waypoint\n"
-						+ "  list                          - show every saved waypoint name"
+				"""
+				Scribe — save and recall coordinates (aliases: /coords, /coordinates, /scribe)
+				  add <name> [<x> <y> <z>]      - save a waypoint (uses your position if coordinates are omitted)
+				  replace <name> [<x> <y> <z>]  - overwrite an existing waypoint (or create if new)
+				  recall <name>                 - show a saved waypoint (click its coordinates to copy them)
+				  remove <name>                 - delete a saved waypoint
+				  list                          - show every saved waypoint name"""
 		), false);
 		return 1;
 	}
