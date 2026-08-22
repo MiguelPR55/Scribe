@@ -98,6 +98,14 @@ public final class ScribeCommand {
 	// add & replace
 	// ------------------------------------------------------------------
 
+	public static boolean isValidWaypointName(String name) {
+		if (name == null || name.isEmpty()) {
+			return false;
+		}
+		char first = name.charAt(0);
+		return !Character.isDigit(first) && first != '~' && first != '^' && first != '-' && first != '+' && first != '.';
+	}
+
 	private static int executeSave(
 			com.mojang.brigadier.context.CommandContext<CommandSourceStack> context,
 			boolean allowOverwrite,
@@ -117,19 +125,27 @@ public final class ScribeCommand {
 			dimension = player.level().dimension().identifier().toString();
 		}
 
-		return saveEntry(context, pos, dimension, allowOverwrite);
+		return saveEntry(context, pos, dimension, allowOverwrite, explicitCoordinates);
 	}
 
 	private static int saveEntry(
 			com.mojang.brigadier.context.CommandContext<CommandSourceStack> context,
 			BlockPos pos,
 			String dimension,
-			boolean allowOverwrite
+			boolean allowOverwrite,
+			boolean explicitCoordinates
 	) {
 		String name = StringArgumentType.getString(context, "name");
 
+		if (!isValidWaypointName(name)) {
+			context.getSource().sendFailure(
+					Component.literal("Waypoint name cannot start with a number or special symbol (~, ^, -, +, .).")
+			);
+			return 0;
+		}
+
 		if (!allowOverwrite && CoordinateStorage.exists(name)) {
-			String replaceCmd = "/coords replace " + name;
+			String replaceCmd = "/coords replace " + name + (explicitCoordinates ? " " + pos.getX() + " " + pos.getY() + " " + pos.getZ() : "");
 			Style suggestStyle = Style.EMPTY
 					.withColor(ChatFormatting.YELLOW)
 					.withClickEvent(new ClickEvent.SuggestCommand(replaceCmd))

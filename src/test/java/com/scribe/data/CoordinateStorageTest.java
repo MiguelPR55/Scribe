@@ -72,4 +72,25 @@ class CoordinateStorageTest {
 		assertEquals("CASA", found.get().name());
 		assertEquals(new BlockPos(20, 65, 20), found.get().pos());
 	}
+
+	@Test
+	@DisplayName("Should validate waypoint names appropriately to avoid coordinate syntax conflicts")
+	void testWaypointNameValidation() {
+		// Valid names
+		assertTrue(com.scribe.command.ScribeCommand.isValidWaypointName("Base"));
+		assertTrue(com.scribe.command.ScribeCommand.isValidWaypointName("mi_casa"));
+		assertTrue(com.scribe.command.ScribeCommand.isValidWaypointName("_underground"));
+		assertTrue(com.scribe.command.ScribeCommand.isValidWaypointName("Base2"));
+
+		// Invalid names (cannot start with digits or coordinate special chars)
+		assertFalse(com.scribe.command.ScribeCommand.isValidWaypointName(null));
+		assertFalse(com.scribe.command.ScribeCommand.isValidWaypointName(""));
+		assertFalse(com.scribe.command.ScribeCommand.isValidWaypointName("1base"));
+		assertFalse(com.scribe.command.ScribeCommand.isValidWaypointName("100"));
+		assertFalse(com.scribe.command.ScribeCommand.isValidWaypointName("~home"));
+		assertFalse(com.scribe.command.ScribeCommand.isValidWaypointName("^look"));
+		assertFalse(com.scribe.command.ScribeCommand.isValidWaypointName("-minus"));
+		assertFalse(com.scribe.command.ScribeCommand.isValidWaypointName("+plus"));
+		assertFalse(com.scribe.command.ScribeCommand.isValidWaypointName(".dot"));
+	}
 }

@@ -18,9 +18,9 @@ public final class Scribe implements ModInitializer {
 		);
 
 		// Load this world's saved_coords.txt as soon as the server (integrated
-		// or dedicated) has started, so the in-memory map is ready before any
-		// command can run.
-		ServerLifecycleEvents.SERVER_STARTED.register(CoordinateStorage::load);
+		// or dedicated) starts initializing, so the in-memory map is ready
+		// before datapacks, functions, or commands can run.
+		ServerLifecycleEvents.SERVER_STARTING.register(CoordinateStorage::load);
 
 		// Unload and clear data when the server stops.
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> CoordinateStorage.unload());
