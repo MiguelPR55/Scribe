@@ -22,7 +22,8 @@ public final class Scribe implements ModInitializer {
 		// before datapacks, functions, or commands can run.
 		ServerLifecycleEvents.SERVER_STARTING.register(CoordinateStorage::load);
 
-		// Unload and clear data when the server stops.
+		// Unload and clear data when the server stops,
+		// preventing state from leaking across different worlds in singleplayer.
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> CoordinateStorage.unload());
 	}
 }

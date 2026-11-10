@@ -62,10 +62,11 @@ public final class CoordinateStorage {
 		try {
 			List<String> lines = Files.readAllLines(filePath, StandardCharsets.UTF_8);
 			for (String line : lines) {
-				if (line.isBlank() || line.trim().startsWith("#")) {
+				String trimmed = line.trim();
+				if (trimmed.isBlank() || trimmed.startsWith("#")) {
 					continue;
 				}
-				CoordinateEntry entry = CoordinateEntry.fromFileLine(line);
+				CoordinateEntry entry = CoordinateEntry.fromFileLine(trimmed);
 				if (entry == null) {
 					LOGGER.warn("[Scribe] Skipping malformed line in {}: '{}'", filePath, line);
 					continue;
@@ -79,11 +80,13 @@ public final class CoordinateStorage {
 	}
 
 	/**
-	 * Clears in-memory entries and resets file path on server shutdown.
+	 * Clears in-memory entries and resets file path on server shutdown,
+	 * preventing lingering state between world loads.
 	 */
 	public static synchronized void unload() {
 		ENTRIES.clear();
 		filePath = null;
+		LOGGER.info("[Scribe] Cleared coordinate storage cache.");
 	}
 
 	/**

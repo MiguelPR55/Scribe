@@ -211,7 +211,13 @@ public final class ScribeCommand {
 	}
 
 	private static Component formatEntry(CommandSourceStack source, CoordinateEntry entry) {
-		return Component.literal(entry.name() + ": ").withStyle(ChatFormatting.AQUA)
+		Style nameStyle = Style.EMPTY
+				.withColor(ChatFormatting.AQUA)
+				.withClickEvent(new ClickEvent.SuggestCommand("/coords recall " + entry.name()))
+				.withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to insert /coords recall " + entry.name())));
+
+		return Component.literal(entry.name()).withStyle(nameStyle)
+				.append(Component.literal(": "))
 				.append(formatClickableCoords(entry.pos()))
 				.append(formatDimension(entry.dimension()))
 				.append(formatDistance(source, entry));

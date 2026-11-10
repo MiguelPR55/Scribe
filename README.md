@@ -1,6 +1,6 @@
 # Scribe 📜
 
-A lightweight Fabric mod for Minecraft **26.1+** that allows players to save and recall waypoints via simple chat commands.
+A lightweight Fabric mod for Minecraft **26.3+** that allows players to save and recall waypoints via simple chat commands.
 
 ## ✨ Features
 
@@ -24,7 +24,7 @@ A lightweight Fabric mod for Minecraft **26.1+** that allows players to save and
 
 ## 🛠️ Building & Installation
 
-Requirements: **Java 25+**, **Minecraft 26.1+**, **Fabric Loader 0.16.0+**, and **Fabric API 0.150.0+**.
+Requirements: **Java 25+**, **Minecraft 26.3+**, **Fabric Loader 0.16.0+**, and **Fabric API 0.166.0+**.
 
 To build the mod from source:
 ```bash
