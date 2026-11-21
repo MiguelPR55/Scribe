@@ -18,6 +18,9 @@
     "main": [
       "com.scribe.Scribe"
     ],
+    "client": [
+      "com.scribe.client.ScribeClient"
+    ],
     "modmenu": [
       "com.scribe.compat.ScribeModMenu"
     ]

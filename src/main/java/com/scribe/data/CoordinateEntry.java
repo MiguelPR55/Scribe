@@ -32,7 +32,8 @@ public record CoordinateEntry(String name, BlockPos pos, String dimension) {
 
 	/**
 	 * Parses one line of the save file back into a CoordinateEntry.
-	 * Expected format: "NAME X Y Z DIMENSION" (exactly 5 space-separated tokens).
+	 * Expected format: "NAME X Y Z DIMENSION" (exactly 5 whitespace-separated tokens).
+	 * Uses a fast zero-regex scanner to avoid pattern allocation during file loading.
 	 *
 	 * @return the parsed entry, or null if the line is malformed.
 	 */
@@ -40,12 +41,40 @@ public record CoordinateEntry(String name, BlockPos pos, String dimension) {
 		if (line == null) {
 			return null;
 		}
-		String[] p = line.trim().split("\\s+");
-		if (p.length != 5) return null;
+		int len = line.length();
+		int idx = 0;
+
+		String[] tokens = new String[5];
+		for (int t = 0; t < 5; t++) {
+			while (idx < len && Character.isWhitespace(line.charAt(idx))) {
+				idx++;
+			}
+			if (idx >= len) {
+				return null;
+			}
+			int start = idx;
+			while (idx < len && !Character.isWhitespace(line.charAt(idx))) {
+				idx++;
+			}
+			tokens[t] = line.substring(start, idx);
+		}
+
+		// Ensure no extra trailing tokens exist
+		while (idx < len && Character.isWhitespace(line.charAt(idx))) {
+			idx++;
+		}
+		if (idx < len) {
+			return null;
+		}
+
 		try {
-			return new CoordinateEntry(p[0], new BlockPos(Integer.parseInt(p[1]), Integer.parseInt(p[2]), Integer.parseInt(p[3])), p[4]);
+			int x = Integer.parseInt(tokens[1]);
+			int y = Integer.parseInt(tokens[2]);
+			int z = Integer.parseInt(tokens[3]);
+			return new CoordinateEntry(tokens[0], new BlockPos(x, y, z), tokens[4]);
 		} catch (NumberFormatException e) {
 			return null;
 		}
 	}
 }
+

@@ -18,11 +18,14 @@ public class ScribeModMenu implements ModMenuApi {
 				Component.literal("Scribe - Quick Guide"),
 				Component.literal("Scribe is a lightweight command-based waypoint utility.\n\n" +
 						"Available Commands:\n" +
-						"• /coords add <name> [x y z] - Save a waypoint\n" +
-						"• /coords replace <name> [x y z] - Overwrite a waypoint\n" +
-						"• /coords recall <name> - Show a saved waypoint (click to copy coords)\n" +
+						"• /coords add <name> [x y z [dim]] - Save a waypoint\n" +
+						"• /coords replace <name> [x y z [dim]] - Overwrite a waypoint\n" +
+						"• /coords rename <old> <new> - Rename a waypoint\n" +
+						"• /coords recall <name> - Show a saved waypoint (click to copy/tp)\n" +
 						"• /coords remove <name> - Delete a waypoint\n" +
-						"• /coords list - View all saved waypoints\n\n" +
+						"• /coords near - Find nearest waypoint in current dimension\n" +
+						"• /coords search <query> - Search waypoints by name or dimension\n" +
+						"• /coords list [page] - View all saved waypoints\n\n" +
 						"Data is stored in your world's data/scribe/saved_coords.txt file."),
 				URI.create("https://github.com/MiguelPR55/Scribe"),
 				() -> Minecraft.getInstance().setScreenAndShow(parent)

@@ -25,5 +25,8 @@ public final class Scribe implements ModInitializer {
 		// Unload and clear data when the server stops,
 		// preventing state from leaking across different worlds in singleplayer.
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> CoordinateStorage.unload());
+
+		// Initialize networking payload registrations.
+		com.scribe.network.ScribeNetworking.initCommon();
 	}
 }
